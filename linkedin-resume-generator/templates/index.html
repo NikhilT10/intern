@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resume Generator</title>
+</head>
+<body>
+    <h1>Resume Generator from LinkedIn PDF</h1>
+    <form id="uploadForm" enctype="multipart/form-data">
+        <label for="apiKey">Enter OpenAI API Key:</label>
+        <input type="text" id="apiKey" name="apiKey" required><br><br>
+
+        <label for="file">Upload LinkedIn PDF:</label>
+        <input type="file" id="file" name="file" accept="application/pdf" required><br><br>
+
+        <button type="submit">Generate Resume</button>
+    </form>
+
+    <div id="result"></div>
+
+    <script>
+        const form = document.getElementById('uploadForm');
+        form.addEventListener('submit', async function(event) {
+            event.preventDefault();
+            const file = document.getElementById('file').files[0];
+            const apiKey = document.getElementById('apiKey').value;
+
+            if (!file || !apiKey) {
+                alert("Please provide the required fields.");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("file", file);
+            formData.append("apiKey", apiKey);
+
+            try {
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    document.getElementById('result').innerHTML = `<p>Error: ${errorData.error}</p>`;
+                    return;
+                }
+
+                const blob = await response.blob();
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = 'resume.html';
+                link.textContent = 'Download Resume';
+                document.getElementById('result').innerHTML = '';
+                document.getElementById('result').appendChild(link);
+
+            } catch (error) {
+                document.getElementById('result').innerHTML = `<p>Error: ${error.message}</p>`;
+            }
+        });
+    </script>
+</body>
+</html>
